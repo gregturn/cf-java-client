@@ -65,6 +65,8 @@ import org.cloudfoundry.client.v2.spaces.SpaceEntity;
 import org.cloudfoundry.client.v2.spaces.SpaceResource;
 import org.cloudfoundry.client.v2.stacks.GetStackRequest;
 import org.cloudfoundry.client.v2.stacks.GetStackResponse;
+import org.cloudfoundry.client.v2.stacks.ListStacksRequest;
+import org.cloudfoundry.client.v2.stacks.ListStacksResponse;
 import org.cloudfoundry.client.v2.stacks.StackEntity;
 import org.cloudfoundry.logging.LogMessage;
 import org.cloudfoundry.logging.LoggingClient;
@@ -80,6 +82,8 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
@@ -592,6 +596,17 @@ public final class DefaultApplicationsTest {
                 .just(fill(GetStackResponse.builder())
                     .entity(fill(StackEntity.builder(), "stack-entity-")
                         .build())
+                    .build()));
+    }
+
+    private static void requestStackIdEmpty(CloudFoundryClient cloudFoundryClient, String stack) {
+        when(cloudFoundryClient.stacks()
+            .list(ListStacksRequest.builder()
+                .name(stack)
+                .page(1)
+                .build()))
+            .thenReturn(Mono
+                .just(fillPage(ListStacksResponse.builder())
                     .build()));
     }
 
@@ -1682,6 +1697,66 @@ public final class DefaultApplicationsTest {
 
     }
 
+    public static final class PushInvalid extends AbstractOperationsApiTest<Void> {
+
+        private final DefaultApplications applications = new DefaultApplications(this.cloudFoundryClient, Mono.just(this.loggingClient), Mono.just(TEST_SPACE_ID));
+
+        @Override
+        protected void assertions(TestSubscriber<Void> testSubscriber) throws Exception {
+            testSubscriber
+                .assertError(RequestValidationException.class, "Request is invalid: name must be specified, application bits must be specified");
+        }
+
+        @Override
+        protected Mono<Void> invoke() {
+            return this.applications
+                .push(PushApplicationRequest.builder()
+                    .build());
+        }
+
+    }
+
+    public static final class PushInvalidStack extends AbstractOperationsApiTest<Void> {
+
+        private final InputStream applicationBits = new ByteArrayInputStream("test-application".getBytes());
+
+        private final DefaultApplications applications = new DefaultApplications(this.cloudFoundryClient, Mono.just(this.loggingClient), Mono.just(TEST_SPACE_ID));
+
+        @Before
+        public void setUp() throws Exception {
+            requestStackIdEmpty(this.cloudFoundryClient, "invalid-stack");
+        }
+
+        @Override
+        protected void assertions(TestSubscriber<Void> testSubscriber) throws Exception {
+            testSubscriber
+                .assertError(IllegalArgumentException.class, "Stack invalid-stack does not exist");
+        }
+
+        @Override
+        protected Mono<Void> invoke() {
+            return this.applications
+                .push(PushApplicationRequest.builder()
+                    .application(this.applicationBits)
+                    .name("test-name")
+                    .stack("invalid-stack")
+                    .build());
+        }
+
+    }
+
+    //TODO: PUSH No Host Name
+    //TODO: PUSH No Route
+    //TODO: PUSH No Start
+    //TODO: PUSH Domain Not Found
+    //TODO: PUSH Random Route
+    //TODO: PUSH New Application
+    //TODO: PUSH Existing Application
+    //TODO: PUSH New Route
+    //TODO: PUSH Existing Route
+    //TODO: PUSH Upload Fails
+    //TODO: PUSH Start Fails
+
     public static final class Rename extends AbstractOperationsApiTest<Void> {
 
         private final DefaultApplications applications = new DefaultApplications(this.cloudFoundryClient, Mono.just(this.loggingClient), Mono.just(TEST_SPACE_ID));
@@ -1690,7 +1765,6 @@ public final class DefaultApplicationsTest {
         public void setUp() throws Exception {
             requestApplications(this.cloudFoundryClient, "test-app-name", TEST_SPACE_ID);
             requestUpdateApplicationRename(this.cloudFoundryClient, "test-metadata-id", "test-new-app-name");
-
         }
 
         @Override
