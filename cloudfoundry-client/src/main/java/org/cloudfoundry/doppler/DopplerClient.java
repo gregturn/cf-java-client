@@ -14,31 +14,8 @@
  * limitations under the License.
  */
 
-package org.cloudfoundry.logging;
+package org.cloudfoundry.doppler;
 
-/**
- * An exception indicating that logging has experienced a problem
- */
-public final class LoggingException extends RuntimeException {
-
-    private static final long serialVersionUID = 6197301178034905524L;
-
-    /**
-     * Creates a new instance
-     *
-     * @param message the message
-     */
-    public LoggingException(String message) {
-        super(message);
-    }
-
-    /**
-     * Creates a new instance
-     *
-     * @param cause the cause
-     */
-    public LoggingException(Throwable cause) {
-        super(cause);
-    }
+public interface DopplerClient {
 
 }

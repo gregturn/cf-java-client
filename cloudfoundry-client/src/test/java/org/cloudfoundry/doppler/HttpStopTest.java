@@ -14,29 +14,8 @@
  * limitations under the License.
  */
 
-package org.cloudfoundry.logging;
+package org.cloudfoundry.doppler;
 
-import reactor.core.publisher.Flux;
-
-/**
- * Main entry point to the Logging Client API
- */
-public interface LoggingClient {
-
-    /**
-     * Makes the Recent Logs request
-     *
-     * @param request the Recent Logs request
-     * @return the response from the Recent Logs request
-     */
-    Flux<LogMessage> recent(RecentLogsRequest request);
-
-    /**
-     * Makes the Stream Logs request
-     *
-     * @param request the Stream Logs request
-     * @return the response from the Stream Logs request
-     */
-    Flux<LogMessage> stream(StreamLogsRequest request);
+public final class HttpStopTest {
 
 }

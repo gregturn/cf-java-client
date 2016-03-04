@@ -51,8 +51,8 @@
         <jjwt.version>0.6.0</jjwt.version>
         <lombok.version>1.16.6</lombok.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <protobuf.version>2.6.1</protobuf.version>
         <reactor.version>2.5.0.BUILD-SNAPSHOT</reactor.version>
+        <wire.version>2.1.1</wire.version>
     </properties>
 
     <dependencyManagement>
@@ -61,6 +61,11 @@
                 <groupId>com.github.zafarkhaja</groupId>
                 <artifactId>java-semver</artifactId>
                 <version>${java-semver.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.wire</groupId>
+                <artifactId>wire-runtime</artifactId>
+                <version>${wire.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.jsonwebtoken</groupId>
@@ -78,6 +83,19 @@
     <build>
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <groupId>com.squareup.wire</groupId>
+                    <artifactId>wire-maven-plugin</artifactId>
+                    <version>2.1.1</version>
+                    <executions>
+                        <execution>
+                            <phase>generate-sources</phase>
+                            <goals>
+                                <goal>generate-sources</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.cloudfoundry.logging;
+package org.cloudfoundry.doppler;
 
 import org.cloudfoundry.ValidationResult;
 import org.junit.Test;
@@ -23,12 +23,13 @@ import static org.cloudfoundry.ValidationResult.Status.INVALID;
 import static org.cloudfoundry.ValidationResult.Status.VALID;
 import static org.junit.Assert.assertEquals;
 
-public final class RecentLogsRequestTest {
+public final class CounterEventTest {
 
     @Test
     public void isValid() {
-        ValidationResult result = RecentLogsRequest.builder()
-            .applicationId("test-application-id")
+        ValidationResult result = CounterEvent.builder()
+            .delta(0L)
+            .name("test-name")
             .build()
             .isValid();
 
@@ -36,13 +37,25 @@ public final class RecentLogsRequestTest {
     }
 
     @Test
-    public void isValidNoId() {
-        ValidationResult result = RecentLogsRequest.builder()
+    public void isValidNoDelta() {
+        ValidationResult result = CounterEvent.builder()
+            .name("test-name")
             .build()
             .isValid();
 
         assertEquals(INVALID, result.getStatus());
-        assertEquals("application id must be specified", result.getMessages().get(0));
+        assertEquals("delta must be specified", result.getMessages().get(0));
+    }
+
+    @Test
+    public void isValidNoName() {
+        ValidationResult result = CounterEvent.builder()
+            .delta(0L)
+            .build()
+            .isValid();
+
+        assertEquals(INVALID, result.getStatus());
+        assertEquals("name must be specified", result.getMessages().get(0));
     }
 
 }

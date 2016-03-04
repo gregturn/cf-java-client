@@ -14,24 +14,8 @@
  * limitations under the License.
  */
 
-package org.cloudfoundry.logging;
+package org.cloudfoundry;
 
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-
-public final class LoggingExceptionTest {
-
-    @Test
-    public void cause() {
-        Exception cause = new Exception();
-        assertEquals(cause, new LoggingException(cause).getCause());
-    }
-
-    @Test
-    public void message() {
-        String message = "test-message";
-        assertEquals(message, new LoggingException(message).getMessage());
-    }
+final class TaskStatus {
 
 }

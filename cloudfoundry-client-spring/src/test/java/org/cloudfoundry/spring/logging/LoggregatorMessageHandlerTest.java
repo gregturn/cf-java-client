@@ -19,7 +19,6 @@ package org.cloudfoundry.spring.logging;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.cloudfoundry.logging.LogMessage;
-import org.cloudfoundry.logging.LoggregatorProtocolBuffers;
 import org.cloudfoundry.util.test.TestSubscriber;
 import org.junit.Test;
 

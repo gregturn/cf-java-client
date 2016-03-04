@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.cloudfoundry.logging;
+package org.cloudfoundry.doppler;
 
 import org.cloudfoundry.ValidationResult;
 import org.junit.Test;
@@ -23,12 +23,14 @@ import static org.cloudfoundry.ValidationResult.Status.INVALID;
 import static org.cloudfoundry.ValidationResult.Status.VALID;
 import static org.junit.Assert.assertEquals;
 
-public final class StreamLogsRequestTest {
+public final class ValueMetricTest {
 
     @Test
     public void isValid() {
-        ValidationResult result = StreamLogsRequest.builder()
-            .applicationId("test-application-id")
+        ValidationResult result = ValueMetric.builder()
+            .name("test-name")
+            .unit("test-unit")
+            .value(0.0)
             .build()
             .isValid();
 
@@ -36,13 +38,39 @@ public final class StreamLogsRequestTest {
     }
 
     @Test
-    public void isValidNoId() {
-        ValidationResult result = StreamLogsRequest.builder()
+    public void isValidNoName() {
+        ValidationResult result = ValueMetric.builder()
+            .unit("test-unit")
+            .value(0.0)
             .build()
             .isValid();
 
         assertEquals(INVALID, result.getStatus());
-        assertEquals("application id must be specified", result.getMessages().get(0));
+        assertEquals("name must be specified", result.getMessages().get(0));
+    }
+
+    @Test
+    public void isValidNoUnit() {
+        ValidationResult result = ValueMetric.builder()
+            .name("test-name")
+            .value(0.0)
+            .build()
+            .isValid();
+
+        assertEquals(INVALID, result.getStatus());
+        assertEquals("unit must be specified", result.getMessages().get(0));
+    }
+
+    @Test
+    public void isValidNoValue() {
+        ValidationResult result = ValueMetric.builder()
+            .name("test-name")
+            .unit("test-unit")
+            .build()
+            .isValid();
+
+        assertEquals(INVALID, result.getStatus());
+        assertEquals("value must be specified", result.getMessages().get(0));
     }
 
 }
