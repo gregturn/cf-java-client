@@ -16,6 +16,43 @@
 
 package org.cloudfoundry.doppler;
 
+import reactor.core.publisher.Flux;
+
+/**
+ * Main entry point to the Doppler Client API
+ */
 public interface DopplerClient {
+
+    /**
+     * Makes the <a href="https://github.com/cloudfoundry/loggregator/tree/develop/src/trafficcontroller#endpoints">Container Metrics</a> request
+     *
+     * @param request the Container Metrics request
+     * @return the container metrics
+     */
+    Flux<ContainerMetric> containerMetrics(ContainerMetricsRequest request);
+
+    /**
+     * Makes the <a href="https://github.com/cloudfoundry/loggregator/tree/develop/src/trafficcontroller#endpoints">Firehose</a> request
+     *
+     * @param request the Firehose request
+     * @return the events from the firehose
+     */
+    Flux<Event> firehose(FirehoseRequest request);
+
+    /**
+     * Makes the <a href="https://github.com/cloudfoundry/loggregator/tree/develop/src/trafficcontroller#endpoints">Recent Logs</a> request
+     *
+     * @param request the Recent Logs request
+     * @return the events from the recent logs
+     */
+    Flux<LogMessage> recentLogs(RecentLogsRequest request);
+
+    /**
+     * Makes the <a href="https://github.com/cloudfoundry/loggregator/tree/develop/src/trafficcontroller#endpoints">Stream</a> request
+     *
+     * @param request the Stream request
+     * @return the events from the stream
+     */
+    Flux<Event> stream(StreamRequest request);
 
 }

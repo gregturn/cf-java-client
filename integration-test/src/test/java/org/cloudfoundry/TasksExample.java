@@ -17,8 +17,11 @@
 package org.cloudfoundry;
 
 import org.cloudfoundry.client.CloudFoundryClient;
+import org.cloudfoundry.client.v3.applications.Application;
 import org.cloudfoundry.client.v3.applications.CreateApplicationRequest;
 import org.cloudfoundry.client.v3.applications.CreateApplicationResponse;
+import org.cloudfoundry.client.v3.applications.ListApplicationTasksRequest;
+import org.cloudfoundry.client.v3.applications.ListApplicationsRequest;
 import org.cloudfoundry.client.v3.packages.CreatePackageRequest;
 import org.cloudfoundry.client.v3.packages.CreatePackageResponse;
 import org.cloudfoundry.client.v3.packages.StagePackageRequest;
@@ -28,12 +31,16 @@ import org.cloudfoundry.client.v3.packages.UploadPackageResponse;
 import org.cloudfoundry.client.v3.tasks.CreateTaskRequest;
 import org.cloudfoundry.client.v3.tasks.CreateTaskResponse;
 import org.cloudfoundry.client.v3.tasks.GetTaskRequest;
+import org.cloudfoundry.client.v3.tasks.ListTasksResponse;
 import org.cloudfoundry.client.v3.tasks.Task;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.GetApplicationRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.time.Duration;
 
 import static org.cloudfoundry.util.tuple.TupleUtils.function;
 
@@ -66,31 +73,36 @@ final class TasksExample {
     }
 
     public TaskStatus status(String id) {
-
-        return operations.applications()
-            .get(GetApplicationRequest.builder() // convert task id to appId
+        return cloudFoundryClient.applicationsV3()
+            .list(ListApplicationsRequest.builder()
                 .name(id)
+                .page(1)
                 .build())
-            .then(applicationDetail ->
-                    client.tasks()
-                        .get(GetTaskRequest.builder()
-                            .id(applicationDetail.getId())
-                            .build())
-                        .then(getTaskResponse -> {
-                            if (getTaskResponse.getState().equals(Task.SUCCEEDED_STATE)) {
-                                return Mono.just(new TaskStatus(id, LaunchState.complete, null));
-                            } else if (getTaskResponse.getState().equals(Task.RUNNING_STATE)) {
-                                return Mono.just(new TaskStatus(id, LaunchState.running, null));
-                            } else if (getTaskResponse.getState().equals(Task.FAILED_STATE)) {
-                                return Mono.just(new TaskStatus(id, LaunchState.failed, null));
-//                            } else if (getTaskResponse.getState().equals(Task.CANCELED_STATE)) {
-//                                return Mono.just(new TaskStatus(id, LaunchState.canceled, null));
-                            } else {
-                                return Mono.just(new TaskStatus(id, LaunchState.unknown, null));
-                            }
-                        })
-            )
-            .get();
+            .flatMap(response -> Flux.fromIterable(response.getResources()))
+            .single()
+            .map(Application::getId)
+            .flatMap(applicationId -> cloudFoundryClient.applicationsV3()
+                .listTasks(ListApplicationTasksRequest.builder()
+                    .applicationId(applicationId)
+                    .build()))
+            .flatMap(response -> Flux.fromIterable(response.getResources()))
+            .map(TasksExample::mapState)
+            .map(launchState -> new TaskStatus(id, launchState, null))
+            .single()  // TODO: You have a problem here.  An application can have multiple tasks and you need there to only be a single one.  You'll need to reconcile this.
+            .get(Duration.ofSeconds(10));
+    }
+
+    private static LaunchState mapState(ListTasksResponse.Resource task) {
+        switch (task.getState()) {
+            case Task.SUCCEEDED_STATE:
+                return LaunchState.complete;
+            case Task.RUNNING_STATE:
+                return LaunchState.running;
+            case Task.FAILED_STATE:
+                return LaunchState.failed;
+            default:
+                return new LaunchState.unknown;
+        }
     }
 
     private static Mono<CreateApplicationResponse> requestCreateApplication(CloudFoundryClient cloudFoundryClient) {
